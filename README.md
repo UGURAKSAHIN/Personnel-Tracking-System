@@ -66,6 +66,13 @@ After pushing the project to a GitHub repository:
 3. Set `Source` to `GitHub Actions`.
 4. Push to `main` or `master` and the site will deploy automatically.
 
+## Demo And Sales Split
+
+- `dist/pages/` is the public demo bundle for GitHub Pages.
+- `dist/package/` is the buyer-facing package for delivery, resale, or client handoff.
+- The public GitHub Pages version is designed to auto-load sample data on first visit so the demo never feels empty.
+- Keep sales delivery separate from the public demo so visitors can preview the product without receiving the full packaged bundle.
+
 ## Customization Ideas
 
 - Replace the product title, colors, and copy with your own brand

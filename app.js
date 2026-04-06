@@ -104,6 +104,7 @@ const payrollTotalStat = document.getElementById('payrollTotalStat');
 const payrollCaption = document.getElementById('payrollCaption');
 const toast = document.getElementById('toast');
 const yearStamp = document.getElementById('yearStamp');
+const demoNotice = document.getElementById('demoNotice');
 
 const state = {
     editingId: null,
@@ -140,8 +141,23 @@ currencySelect.value = state.settings.currency;
 statusInput.value = DEFAULTS.status;
 sortSelect.value = state.sortValue;
 
+initializeDemoExperience();
 renderApp();
 registerServiceWorker();
+
+function initializeDemoExperience() {
+    const environment = getEnvironmentState();
+
+    if (demoNotice) {
+        demoNotice.hidden = !environment.isPublicDemo;
+    }
+
+    if (environment.shouldSeedDemoData) {
+        state.personnel = createDemoPersonnel();
+        persistAll();
+        showToast('Demo data loaded for the live preview.');
+    }
+}
 
 function handleFormSubmit(event) {
     event.preventDefault();
@@ -301,6 +317,13 @@ function createPerson(payload, id = createId(), createdAt = new Date().toISOStri
         updatedAt,
         searchIndex: buildSearchIndex(payload)
     };
+}
+
+function createDemoPersonnel() {
+    return DEMO_PERSONNEL.map((person, index) => {
+        const timestamp = new Date(Date.now() - index * 86400000).toISOString();
+        return createPerson(person, createId(), timestamp, timestamp);
+    });
 }
 
 function updatePersonnel(id, payload) {
@@ -530,7 +553,7 @@ function createRow(person) {
 
 function createCell(text, className = '') {
     const cell = document.createElement('td');
-    cell.textContent = text;
+    cell.textContent = text === 'â€”' ? '-' : text;
 
     if (className) {
         cell.className = className;
@@ -584,7 +607,7 @@ function updateResultsMeta(visibleCount) {
     }
 
     fragments.push(`Currency: ${state.settings.currency}`);
-    resultsMeta.textContent = fragments.join(' • ');
+    resultsMeta.textContent = fragments.join(' | ');
 }
 
 function loadDemoData() {
@@ -595,10 +618,7 @@ function loadDemoData() {
         return;
     }
 
-    state.personnel = DEMO_PERSONNEL.map((person, index) => {
-        const timestamp = new Date(Date.now() - index * 86400000).toISOString();
-        return createPerson(person, createId(), timestamp, timestamp);
-    });
+    state.personnel = createDemoPersonnel();
 
     persistAll();
     resetFormState();
@@ -944,6 +964,19 @@ function registerServiceWorker() {
     navigator.serviceWorker.register('./sw.js').catch((error) => {
         console.warn('Service worker registration failed.', error);
     });
+}
+
+function getEnvironmentState() {
+    const hostname = String(window.location.hostname || '').toLowerCase();
+    const query = new URLSearchParams(window.location.search);
+    const isGitHubPages = hostname.endsWith('github.io');
+    const isForcedDemo = query.get('demo') === '1';
+    const isPublicDemo = isGitHubPages || isForcedDemo;
+
+    return {
+        isPublicDemo,
+        shouldSeedDemoData: isPublicDemo && state.personnel.length === 0
+    };
 }
 
 function toSlug(value) {

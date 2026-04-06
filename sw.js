@@ -1,4 +1,4 @@
-const CACHE_NAME = 'personnel-tracking-system-pro-v1';
+const CACHE_NAME = 'personnel-tracking-system-pro-v2';
 const CORE_ASSETS = [
     './',
     './index.html',
