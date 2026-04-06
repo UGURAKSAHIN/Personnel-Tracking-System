@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Offline-ready personnel dashboard with filters, exports, and polished UI for lightweight HR teams.">
+    <meta name="apple-mobile-web-app-title" content="Personnel Pro">
+    <meta name="theme-color" content="#133b34">
+    <title>Personnel Tracking System Pro</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="app-shell">
+        <section class="panel hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Sell-Ready Static Product</p>
+                <h1>Personnel Tracking System Pro</h1>
+                <p class="intro">A polished, offline-ready personnel management dashboard you can brand, package, and sell as a lightweight HR admin toolkit.</p>
+
+                <div class="hero-tags">
+                    <span>Offline ready</span>
+                    <span>Import and export</span>
+                    <span>No backend required</span>
+                    <span>PWA installable</span>
+                </div>
+            </div>
+
+            <div class="hero-actions">
+                <button type="button" id="loadDemoButton" class="secondary-button">Load Demo Data</button>
+                <button type="button" id="exportJsonButton" class="secondary-button">Export JSON</button>
+                <button type="button" id="exportCsvButton" class="secondary-button">Export CSV</button>
+                <button type="button" id="importButton" class="ghost-button">Import JSON</button>
+                <button type="button" id="clearDataButton" class="danger-button">Clear All</button>
+                <input type="file" id="importFile" accept=".json,application/json" hidden>
+            </div>
+        </section>
+
+        <section class="stats-grid">
+            <article class="panel metric-card">
+                <p class="metric-label">Total Personnel</p>
+                <strong id="totalPersonnelStat" class="metric-value">0</strong>
+                <span class="metric-note">Records stored locally in the browser.</span>
+            </article>
+
+            <article class="panel metric-card">
+                <p class="metric-label">Active Staff</p>
+                <strong id="activePersonnelStat" class="metric-value">0</strong>
+                <span class="metric-note">Quick view of currently active employees.</span>
+            </article>
+
+            <article class="panel metric-card">
+                <p class="metric-label">Departments</p>
+                <strong id="departmentCountStat" class="metric-value">0</strong>
+                <span class="metric-note">Automatically calculated from your records.</span>
+            </article>
+
+            <article class="panel metric-card">
+                <p class="metric-label">Payroll Total</p>
+                <strong id="payrollTotalStat" class="metric-value">$0</strong>
+                <span id="payrollCaption" class="metric-note">Add your first record to build payroll insights.</span>
+            </article>
+        </section>
+
+        <section class="workspace">
+            <aside class="panel form-panel">
+                <div class="panel-heading">
+                    <p class="section-label">Editor</p>
+                    <h2 id="formTitle">Add Personnel Record</h2>
+                    <p class="panel-copy">Capture core staff details, salary information, and internal notes in one place.</p>
+                </div>
+
+                <form id="personForm" class="person-form">
+                    <label class="field">
+                        <span>Full Name</span>
+                        <input type="text" id="fullName" name="fullName" placeholder="Aylin Demir" autocomplete="name" required>
+                    </label>
+
+                    <label class="field">
+                        <span>Work Email</span>
+                        <input type="email" id="email" name="email" placeholder="name@company.com" autocomplete="email">
+                    </label>
+
+                    <label class="field">
+                        <span>Department</span>
+                        <input type="text" id="department" name="department" placeholder="Human Resources" required>
+                    </label>
+
+                    <label class="field">
+                        <span>Position</span>
+                        <input type="text" id="position" name="position" placeholder="HR Manager" required>
+                    </label>
+
+                    <label class="field">
+                        <span>Status</span>
+                        <select id="status" name="status">
+                            <option value="Active">Active</option>
+                            <option value="Probation">Probation</option>
+                            <option value="On Leave">On Leave</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </label>
+
+                    <label class="field">
+                        <span>Start Date</span>
+                        <input type="date" id="startDate" name="startDate">
+                    </label>
+
+                    <label class="field">
+                        <span>Salary</span>
+                        <input type="number" id="salary" name="salary" placeholder="4800" min="0" step="100" inputmode="numeric" required>
+                    </label>
+
+                    <label class="field field--full">
+                        <span>Notes</span>
+                        <textarea id="notes" name="notes" placeholder="Optional notes, responsibilities, or reminders..."></textarea>
+                    </label>
+
+                    <div class="form-actions field--full">
+                        <button type="submit" id="submitButton">Save Record</button>
+                        <button type="button" id="cancelEditButton" class="secondary-button" hidden>Cancel Edit</button>
+                    </div>
+                </form>
+
+                <p class="panel-footnote">Everything is stored in local browser storage, making this a low-maintenance deliverable for demos or downloadable products.</p>
+            </aside>
+
+            <section class="panel table-panel">
+                <div class="panel-heading">
+                    <p class="section-label">Directory</p>
+                    <h2>Team Overview</h2>
+                    <p class="panel-copy">Search, filter, sort, and export the current dataset from a single dashboard.</p>
+                </div>
+
+                <div class="toolbar-grid">
+                    <label class="field field--wide">
+                        <span>Search</span>
+                        <input type="search" id="search" placeholder="Search by name, email, department, or role..." aria-label="Search personnel">
+                    </label>
+
+                    <label class="field field--compact">
+                        <span>Status Filter</span>
+                        <select id="statusFilter" aria-label="Filter by status">
+                            <option value="all">All statuses</option>
+                            <option value="Active">Active</option>
+                            <option value="Probation">Probation</option>
+                            <option value="On Leave">On Leave</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </label>
+
+                    <label class="field field--compact">
+                        <span>Department Filter</span>
+                        <select id="departmentFilter" aria-label="Filter by department">
+                            <option value="all">All departments</option>
+                        </select>
+                    </label>
+
+                    <label class="field field--compact">
+                        <span>Sort</span>
+                        <select id="sortSelect" aria-label="Sort records">
+                            <option value="recent">Recently updated</option>
+                            <option value="name-asc">Name A-Z</option>
+                            <option value="salary-desc">Salary high-low</option>
+                            <option value="salary-asc">Salary low-high</option>
+                            <option value="start-desc">Newest start date</option>
+                            <option value="department-asc">Department A-Z</option>
+                        </select>
+                    </label>
+
+                    <label class="field field--compact">
+                        <span>Currency</span>
+                        <select id="currencySelect" aria-label="Select currency">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="TRY">TRY</option>
+                            <option value="GBP">GBP</option>
+                        </select>
+                    </label>
+                </div>
+
+                <p id="resultsMeta" class="results-meta" aria-live="polite"></p>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Position</th>
+                                <th>Status</th>
+                                <th>Start Date</th>
+                                <th>Email</th>
+                                <th>Salary</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="personList"></tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+
+        <footer class="app-footer">
+            <p>Personnel Tracking System Pro is packaged as a static dashboard template for quick demos, lightweight teams, and digital product sales.</p><br>
+            <p>Prepared for resale packaging in <span id="yearStamp"></span>.</p>
+        </footer>
+    </main>
+
+    <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

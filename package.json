@@ -1,0 +1,19 @@
+{
+  "name": "personnel-tracking-system-pro",
+  "version": "1.0.0",
+  "description": "Offline-ready personnel dashboard packaged for demos, delivery, and digital product sales.",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "check": "node --check app.js && node --check sw.js",
+    "build:package": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-product.ps1",
+    "build:pages": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-pages.ps1"
+  },
+  "keywords": [
+    "personnel",
+    "employee",
+    "dashboard",
+    "template",
+    "pwa"
+  ]
+}
