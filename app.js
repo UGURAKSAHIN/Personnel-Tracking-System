@@ -912,6 +912,7 @@ function formatDate(value) {
 }
 
 function stripDerivedFields(person) {
+    // The app is intentionally local-first, so payroll data needs to remain in persisted records.
     return {
         id: person.id,
         fullName: person.fullName,
@@ -920,7 +921,7 @@ function stripDerivedFields(person) {
         position: person.position,
         status: person.status,
         startDate: person.startDate,
-        // salary intentionally omitted from persisted data to avoid storing it in clear text
+        salary: person.salary,
         notes: person.notes,
         createdAt: person.createdAt,
         updatedAt: person.updatedAt
