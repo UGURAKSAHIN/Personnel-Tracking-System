@@ -920,7 +920,7 @@ function stripDerivedFields(person) {
         position: person.position,
         status: person.status,
         startDate: person.startDate,
-        salary: person.salary,
+        // salary intentionally omitted from persisted data to avoid storing it in clear text
         notes: person.notes,
         createdAt: person.createdAt,
         updatedAt: person.updatedAt
