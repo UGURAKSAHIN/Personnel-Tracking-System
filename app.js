@@ -980,7 +980,8 @@ function registerServiceWorker() {
 function getEnvironmentState() {
     const hostname = String(window.location.hostname || '').toLowerCase();
     const query = new URLSearchParams(window.location.search);
-    const isGitHubPages = hostname.endsWith('github.io');
+    const githubPagesHosts = ['github.io'];
+    const isGitHubPages = githubPagesHosts.includes(hostname);
     const isForcedDemo = query.get('demo') === '1';
     const isPublicDemo = isGitHubPages || isForcedDemo;
 
