@@ -22,6 +22,7 @@ Personnel Tracking System Pro is a static, offline-ready personnel dashboard des
 - `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`: product icons
 - `PRODUCT-LISTING.md`: ready-to-adapt product copy for marketplaces
 - `CHANGELOG.md`: release notes for the current package
+- `LICENSE`: MIT license for repository distribution
 - `scripts/build-product.ps1`: creates the distributable zip
 
 ## Quick Start
