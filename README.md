@@ -27,7 +27,7 @@ Managing personnel with spreadsheets can quickly become messy and inefficient.
 
 ## 🖥️ Live Demo
 
-https://www.github.com/UGURAKSAHIN/Personnel-Tracking-System.io
+https://uguraksahin.github.io/Personnel-Tracking-System/
 
 
 ## 📦 Project Structure
