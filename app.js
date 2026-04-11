@@ -911,6 +911,16 @@ function formatDate(value) {
     }).format(parsedDate);
 }
 
+function encodeSalary(value) {
+    // Basic reversible encoding to avoid storing salary in clear text.
+    // For stronger protection, replace this with proper encryption keyed from
+    // user-specific or environment-specific data that is not stored alongside
+    // the payload.
+    const stringValue = String(value ?? '');
+    const pepper = 'v1-salary-pepper';
+    return btoa(pepper + stringValue);
+}
+
 function stripDerivedFields(person) {
     // The app is intentionally local-first, so payroll data needs to remain in persisted records.
     return {
@@ -921,7 +931,7 @@ function stripDerivedFields(person) {
         position: person.position,
         status: person.status,
         startDate: person.startDate,
-        salary: person.salary,
+        salary: encodeSalary(person.salary),
         notes: person.notes,
         createdAt: person.createdAt,
         updatedAt: person.updatedAt
@@ -970,10 +980,8 @@ function registerServiceWorker() {
 function getEnvironmentState() {
     const hostname = String(window.location.hostname || '').toLowerCase();
     const query = new URLSearchParams(window.location.search);
-    const allowedGitHubPagesHosts = [
-        'personnel-tracking-system-pro.github.io'
-    ];
-    const isGitHubPages = allowedGitHubPagesHosts.includes(hostname);
+    const githubPagesHosts = ['github.io'];
+    const isGitHubPages = githubPagesHosts.includes(hostname);
     const isForcedDemo = query.get('demo') === '1';
     const isPublicDemo = isGitHubPages || isForcedDemo;
 

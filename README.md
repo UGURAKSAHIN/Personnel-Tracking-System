@@ -1,99 +1,115 @@
-# Personnel Tracking System Pro
+# 🚀 Personnel Tracking System Pro
 
-Personnel Tracking System Pro is a static, offline-ready personnel dashboard designed to be easy to brand, package, and sell as a lightweight HR admin product.
+A modern, offline-first personnel management dashboard designed for **small teams, agencies, and freelancers**.
 
-## Highlights
 
-- Modern dashboard layout with professional visual polish
-- Personnel editor with department, status, salary, notes, and optional email/start date
-- Search, status filtering, department filtering, and sorting
-- JSON backup export, filtered CSV export, and JSON import
-- Demo dataset for screenshots, previews, and buyer walkthroughs
-- PWA manifest, service worker, favicon, and mobile icons
-- No backend or database required
+## ✨ Why This Product?
 
-## Files Included
+Managing personnel with spreadsheets can quickly become messy and inefficient.
 
-- `index.html`: main app shell
-- `style.css`: complete responsive UI styling
-- `app.js`: state management, filters, import/export, and rendering
-- `sw.js`: offline cache support
-- `site.webmanifest`: installable app metadata
-- `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`: product icons
-- `PRODUCT-LISTING.md`: ready-to-adapt product copy for marketplaces
-- `CHANGELOG.md`: release notes for the current package
-- `LICENSE`: MIT license for repository distribution
-- `scripts/build-product.ps1`: creates the distributable zip
+**Personnel Tracking System Pro** gives you a clean, fast, and fully offline solution to:
 
-## Quick Start
+* Organize departments and statuses
+* Export and backup data anytime
 
-1. Open `index.html` directly in a browser for a quick preview.
-2. Use the VS Code debug profile if you want browser debugging.
-3. Load demo data from the hero actions to populate the dashboard.
-4. Export JSON to create a portable backup.
 
-## Package Build
+## 🔥 Key Features
 
-Run the checks:
+* 🧑‍💼 Personnel management (department, status, salary, notes)
+* 🔍 Search, filter, and sorting system
+* 📊 Clean and modern dashboard UI
+* 💾 JSON backup & restore support
+* 📁 Filtered CSV export
+* 📦 Ready-to-use demo dataset
+* 📱 Progressive Web App (PWA) support
+* ⚡ Fully offline (no server required)
+
+
+## 🖥️ Live Demo
+
+https://uguraksahin.github.io/Personnel-Tracking-System/
+
+
+## 📦 Project Structure
+
+```
+.
+├── index.html          # Main application
+├── style.css           # UI styling
+├── app.js              # Core logic & state management
+├── sw.js               # Service worker (offline support)
+├── site.webmanifest    # PWA config
+├── icons/              # App icons
+├── dist/               # Build outputs
+```
+
+
+## ⚡ Quick Start
+
+1. Download or clone the repository
+2. Open `index.html` in your browser
+3. Load demo data from the UI
+4. Start managing your personnel
+
+
+## 🛠️ Build & Packaging
+
+Run project checks:
 
 ```bash
 npm run check
 ```
 
-Build the sale package:
+Build distributable package:
 
 ```bash
 npm run build:package
 ```
 
-The distributable zip is created inside `dist/`.
+👉 Output:
 
-## GitHub Pages Publish
+```
+dist/package/
+```
 
-Prepare the GitHub Pages bundle:
+
+
+## 🌐 Deployment (GitHub Pages)
+
+Prepare deployable version:
 
 ```bash
 npm run build:pages
 ```
 
-This creates a clean publishable site in `dist/pages/`.
+Then:
 
-For automatic deployment, this repo now includes `.github/workflows/deploy-pages.yml`.
-After pushing the project to a GitHub repository:
+1. Push repository to GitHub
+2. Go to Settings → Pages
+3. Select **GitHub Actions**
+4. Deploy automatically
 
-1. Open the repository on GitHub.
-2. Go to `Settings > Pages`.
-3. Set `Source` to `GitHub Actions`.
-4. Push to `main` or `master` and the site will deploy automatically.
+## 📄 License
 
-## Demo And Sales Split
+MIT License — free to use, modify, and distribute.
 
-- `dist/pages/` is the public demo bundle for GitHub Pages.
-- `dist/package/` is the buyer-facing package for delivery, resale, or client handoff.
-- The public GitHub Pages version is designed to auto-load sample data on first visit so the demo never feels empty.
-- Keep sales delivery separate from the public demo so visitors can preview the product without receiving the full packaged bundle.
 
-## Customization Ideas
 
-- Replace the product title, colors, and copy with your own brand
-- Add company logos or white-label onboarding text
-- Change supported currencies in `app.js`
-- Extend records with phone number, manager, branch, or employee ID
-- Host a live demo on Netlify, Vercel, or GitHub Pages
+## 🤝 Contributing
 
-## Suggested Sales Positioning
+Pull requests are welcome. For major changes, please open an issue first.
 
-This project fits best as:
 
-- A downloadable HR mini-dashboard template
-- A local-first admin tool for small teams
-- A quick-start personnel tracker for agencies and freelancers
-- A white-label operations dashboard starter
 
-## Final Packaging Checklist
+## ⭐ Support
 
-- Replace the brand name if you want a unique marketplace identity
-- Capture 4 to 6 screenshots using the demo dataset
-- Export a clean JSON backup to include as optional sample data
-- Upload the generated zip from `dist/`
-- Add your preferred commercial terms before publishing
+If you like this project, consider giving it a star ⭐
+
+
+
+## 👨‍💻 Author
+
+Developed by Uğur Akşahin
+
+* GitHub: https://github.com/UGURAKSAHIN
+* LinkedIn: https://linkedin.com/in/uguraksahin
