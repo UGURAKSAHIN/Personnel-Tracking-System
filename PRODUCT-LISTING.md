@@ -52,6 +52,13 @@ Personnel Tracking System Pro helps small teams track employees, departments, sa
 - Offer customization as an upsell
 - Offer deployment/setup as a service add-on
 
+## Demo Strategy
+
+- Publish `dist/pages/` as a live public demo on GitHub Pages
+- Keep the full buyer package in `dist/package/` for delivery after purchase
+- Use the hosted demo for screenshots, walkthrough videos, and trust-building
+- Mention that the live preview uses browser-local sample data rather than a real personnel database
+
 ## Suggested Upsells
 
 - Custom branding package

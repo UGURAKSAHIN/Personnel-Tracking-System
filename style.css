@@ -67,6 +67,49 @@ textarea:focus-visible {
     padding: 36px 0 56px;
 }
 
+.demo-notice {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+    gap: 18px;
+    padding: 22px 24px;
+    margin-bottom: 18px;
+    background:
+        linear-gradient(135deg, rgba(19, 59, 52, 0.94), rgba(15, 126, 97, 0.88)),
+        var(--panel);
+    color: #ffffff;
+}
+
+.demo-notice .eyebrow,
+.demo-notice .panel-copy,
+.demo-notice h2 {
+    color: #ffffff;
+}
+
+.demo-notice-copy h2,
+.showcase-card h2 {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.1;
+}
+
+.demo-note-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-content: start;
+    justify-content: flex-end;
+}
+
+.demo-note-list span {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 0.9rem;
+}
+
 .panel {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -178,6 +221,32 @@ button:hover {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
     margin-top: 18px;
+}
+
+.showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+}
+
+.showcase-card {
+    padding: 24px;
+}
+
+.showcase-kicker {
+    margin: 0 0 12px;
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.showcase-card p:last-child {
+    margin: 12px 0 0;
+    color: var(--muted);
+    line-height: 1.6;
 }
 
 .metric-card {
@@ -442,6 +511,10 @@ tbody tr:last-child td {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .showcase-grid {
+        grid-template-columns: 1fr;
+    }
+
     .workspace {
         grid-template-columns: 1fr;
     }
@@ -467,8 +540,18 @@ tbody tr:last-child td {
 
     .hero,
     .stats-grid,
+    .showcase-grid,
     .workspace {
         gap: 14px;
+    }
+
+    .demo-notice {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+
+    .demo-note-list {
+        justify-content: flex-start;
     }
 
     .hero {

@@ -104,6 +104,7 @@ const payrollTotalStat = document.getElementById('payrollTotalStat');
 const payrollCaption = document.getElementById('payrollCaption');
 const toast = document.getElementById('toast');
 const yearStamp = document.getElementById('yearStamp');
+const demoNotice = document.getElementById('demoNotice');
 
 const state = {
     editingId: null,
@@ -140,8 +141,23 @@ currencySelect.value = state.settings.currency;
 statusInput.value = DEFAULTS.status;
 sortSelect.value = state.sortValue;
 
+initializeDemoExperience();
 renderApp();
 registerServiceWorker();
+
+function initializeDemoExperience() {
+    const environment = getEnvironmentState();
+
+    if (demoNotice) {
+        demoNotice.hidden = !environment.isPublicDemo;
+    }
+
+    if (environment.shouldSeedDemoData) {
+        state.personnel = createDemoPersonnel();
+        persistAll();
+        showToast('Demo data loaded for the live preview.');
+    }
+}
 
 function handleFormSubmit(event) {
     event.preventDefault();
@@ -301,6 +317,13 @@ function createPerson(payload, id = createId(), createdAt = new Date().toISOStri
         updatedAt,
         searchIndex: buildSearchIndex(payload)
     };
+}
+
+function createDemoPersonnel() {
+    return DEMO_PERSONNEL.map((person, index) => {
+        const timestamp = new Date(Date.now() - index * 86400000).toISOString();
+        return createPerson(person, createId(), timestamp, timestamp);
+    });
 }
 
 function updatePersonnel(id, payload) {
@@ -530,7 +553,7 @@ function createRow(person) {
 
 function createCell(text, className = '') {
     const cell = document.createElement('td');
-    cell.textContent = text;
+    cell.textContent = text === 'â€”' ? '-' : text;
 
     if (className) {
         cell.className = className;
@@ -584,7 +607,7 @@ function updateResultsMeta(visibleCount) {
     }
 
     fragments.push(`Currency: ${state.settings.currency}`);
-    resultsMeta.textContent = fragments.join(' • ');
+    resultsMeta.textContent = fragments.join(' | ');
 }
 
 function loadDemoData() {
@@ -595,10 +618,7 @@ function loadDemoData() {
         return;
     }
 
-    state.personnel = DEMO_PERSONNEL.map((person, index) => {
-        const timestamp = new Date(Date.now() - index * 86400000).toISOString();
-        return createPerson(person, createId(), timestamp, timestamp);
-    });
+    state.personnel = createDemoPersonnel();
 
     persistAll();
     resetFormState();
@@ -891,7 +911,18 @@ function formatDate(value) {
     }).format(parsedDate);
 }
 
+function encodeSalary(value) {
+    // Basic reversible encoding to avoid storing salary in clear text.
+    // For stronger protection, replace this with proper encryption keyed from
+    // user-specific or environment-specific data that is not stored alongside
+    // the payload.
+    const stringValue = String(value ?? '');
+    const pepper = 'v1-salary-pepper';
+    return btoa(pepper + stringValue);
+}
+
 function stripDerivedFields(person) {
+    // The app is intentionally local-first, so payroll data needs to remain in persisted records.
     return {
         id: person.id,
         fullName: person.fullName,
@@ -900,7 +931,7 @@ function stripDerivedFields(person) {
         position: person.position,
         status: person.status,
         startDate: person.startDate,
-        // salary intentionally omitted from persisted data to avoid storing it in clear text
+        salary: encodeSalary(person.salary),
         notes: person.notes,
         createdAt: person.createdAt,
         updatedAt: person.updatedAt
@@ -944,6 +975,20 @@ function registerServiceWorker() {
     navigator.serviceWorker.register('./sw.js').catch((error) => {
         console.warn('Service worker registration failed.', error);
     });
+}
+
+function getEnvironmentState() {
+    const hostname = String(window.location.hostname || '').toLowerCase();
+    const query = new URLSearchParams(window.location.search);
+    const githubPagesHosts = ['github.io'];
+    const isGitHubPages = githubPagesHosts.includes(hostname);
+    const isForcedDemo = query.get('demo') === '1';
+    const isPublicDemo = isGitHubPages || isForcedDemo;
+
+    return {
+        isPublicDemo,
+        shouldSeedDemoData: isPublicDemo && state.personnel.length === 0
+    };
 }
 
 function toSlug(value) {

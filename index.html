@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Offline-ready personnel dashboard with filters, exports, and polished UI for lightweight HR teams.">
+    <meta name="description" content="Offline-ready personnel dashboard with a polished live demo, local-first storage, and a separate sale-ready source package.">
     <meta name="apple-mobile-web-app-title" content="Personnel Pro">
     <meta name="theme-color" content="#133b34">
     <title>Personnel Tracking System Pro</title>
@@ -14,16 +14,31 @@
 </head>
 <body>
     <main class="app-shell">
+        <section id="demoNotice" class="panel demo-notice" hidden>
+            <div class="demo-notice-copy">
+                <p class="eyebrow">Public Demo</p>
+                <h2>Live preview mode is active.</h2>
+                <p class="panel-copy">This hosted version is meant for public showcasing. Sample records can load automatically, and any edits stay only in this browser.</p>
+            </div>
+
+            <div class="demo-note-list" aria-label="Demo highlights">
+                <span>Sample data only</span>
+                <span>No backend required</span>
+                <span>Buyer package stays separate</span>
+            </div>
+        </section>
+
         <section class="panel hero">
             <div class="hero-copy">
-                <p class="eyebrow">Sell-Ready Static Product</p>
+                <p class="eyebrow">Live Demo and Sale-Ready Product</p>
                 <h1>Personnel Tracking System Pro</h1>
-                <p class="intro">A polished, offline-ready personnel management dashboard you can brand, package, and sell as a lightweight HR admin toolkit.</p>
+                <p class="intro">A polished, offline-ready personnel management dashboard you can showcase publicly as a live demo and deliver separately as a clean source package.</p>
 
                 <div class="hero-tags">
+                    <span>Public demo ready</span>
                     <span>Offline ready</span>
                     <span>Import and export</span>
-                    <span>No backend required</span>
+                    <span>Separate buyer bundle</span>
                     <span>PWA installable</span>
                 </div>
             </div>
@@ -61,6 +76,26 @@
                 <p class="metric-label">Payroll Total</p>
                 <strong id="payrollTotalStat" class="metric-value">$0</strong>
                 <span id="payrollCaption" class="metric-note">Add your first record to build payroll insights.</span>
+            </article>
+        </section>
+
+        <section class="showcase-grid" aria-label="Deployment strategy highlights">
+            <article class="panel showcase-card">
+                <p class="showcase-kicker">Public Demo</p>
+                <h2>Show the product without giving away the full package.</h2>
+                <p>Host this dashboard on GitHub Pages as a public preview while keeping the downloadable buyer bundle as a separate delivery asset.</p>
+            </article>
+
+            <article class="panel showcase-card">
+                <p class="showcase-kicker">Local-First Privacy</p>
+                <h2>Visitors can explore safely.</h2>
+                <p>The demo runs entirely in the browser, so sample edits stay local and there is no server-side personnel database to maintain.</p>
+            </article>
+
+            <article class="panel showcase-card">
+                <p class="showcase-kicker">Buyer Package</p>
+                <h2>Ship the source, docs, and assets separately.</h2>
+                <p>Use the packaged bundle for clients or marketplace delivery while the public site stays focused on previews, screenshots, and trust-building.</p>
             </article>
         </section>
 
@@ -204,8 +239,8 @@
         </section>
 
         <footer class="app-footer">
-            <p>Personnel Tracking System Pro is packaged as a static dashboard template for quick demos, lightweight teams, and digital product sales.</p><br>
-            <p>Prepared for resale packaging in <span id="yearStamp"></span>.</p>
+            <p>Personnel Tracking System Pro is designed to work as both a public-facing live demo and a separate static product bundle for resale or client delivery.</p><br>
+            <p>Prepared for public preview and product packaging in <span id="yearStamp"></span>.</p>
         </footer>
     </main>
 
