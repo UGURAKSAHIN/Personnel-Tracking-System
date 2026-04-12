@@ -787,17 +787,17 @@ function loadSettings() {
 }
 
 function sanitizePerson(person) {
-    const fullName = String(person?.fullName ?? person?.name ?? '').trim();
-    const email = String(person?.email ?? '').trim().toLowerCase();
-    const department = String(person?.department ?? DEFAULTS.department).trim() || DEFAULTS.department;
-    const position = String(person?.position ?? '').trim();
-    const status = STATUS_OPTIONS.includes(person?.status) ? person.status : DEFAULTS.status;
-    const startDate = sanitizeDateValue(person?.startDate ?? '');
-    const salary = Number(person?.salary);
-    const notes = String(person?.notes ?? '').trim();
-    const id = typeof person?.id === 'string' && person.id ? person.id : createId();
-    const createdAt = sanitizeTimestamp(person?.createdAt);
-    const updatedAt = sanitizeTimestamp(person?.updatedAt ?? createdAt);
+    const fullName = String(person.fullName ?? person?.name ?? '').trim();
+    const email = String(person.email ?? '').trim().toLowerCase();
+    const department = String(person.department ?? DEFAULTS.department).trim() || DEFAULTS.department;
+    const position = String(person.position ?? '').trim();
+    const status = STATUS_OPTIONS.includes(person.status) ? person.status : DEFAULTS.status;
+    const startDate = sanitizeDateValue(person.startDate ?? '');
+    const salary = Number(person.salary);
+    const notes = String(person.notes ?? '').trim();
+    const id = typeof person.id === 'string' && person.id ? person.id : createId();
+    const createdAt = sanitizeTimestamp(person.createdAt);
+    const updatedAt = sanitizeTimestamp(person.updatedAt ?? createdAt);
 
     if (!fullName || !position || Number.isNaN(salary) || salary < 0) {
         return null;
@@ -922,7 +922,6 @@ function encodeSalary(value) {
 }
 
 function stripDerivedFields(person) {
-    // The app is intentionally local-first, so payroll data needs to remain in persisted records.
     return {
         id: person.id,
         fullName: person.fullName,
