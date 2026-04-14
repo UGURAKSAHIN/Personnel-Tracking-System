@@ -237,13 +237,26 @@ textarea {
 }
 
 .site-nav a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border-radius: 999px;
     color: var(--muted);
     font-weight: 700;
     font-size: 0.95rem;
+    transition: color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
 }
 
 .site-nav a:hover {
     color: var(--accent-deep);
+    background: rgba(15, 138, 104, 0.08);
+}
+
+.site-nav a[aria-current="page"] {
+    color: var(--accent-deep);
+    background: rgba(15, 138, 104, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(15, 138, 104, 0.12);
 }
 
 .header-actions {
@@ -263,6 +276,31 @@ textarea {
 .workspace,
 .app-footer {
     animation: rise-in 640ms ease both;
+}
+
+#top,
+#features,
+#workflow,
+#plans,
+#faq,
+#demo,
+#workspace,
+#checkout {
+    scroll-margin-top: 148px;
+}
+
+.section-current {
+    position: relative;
+}
+
+.section-current::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1px solid rgba(15, 138, 104, 0.18);
+    box-shadow: 0 0 0 8px rgba(15, 138, 104, 0.05);
+    pointer-events: none;
 }
 
 .landing-hero {

@@ -24,11 +24,13 @@
             </a>
 
             <nav class="site-nav" aria-label="Primary">
-                <a href="#features">Features</a>
-                <a href="#workflow">Workflow</a>
-                <a href="#plans">Plans</a>
-                <a href="#faq">FAQ</a>
-                <a href="#demo">Demo</a>
+                <a href="#features" data-section-link="features">Features</a>
+                <a href="#workflow" data-section-link="workflow">Workflow</a>
+                <a href="#plans" data-section-link="plans">Plans</a>
+                <a href="#faq" data-section-link="faq">FAQ</a>
+                <a href="#demo" data-section-link="demo">Demo</a>
+                <a href="#workspace" data-section-link="workspace">Workspace</a>
+                <a href="#checkout" data-section-link="checkout">Checkout</a>
             </nav>
 
             <div class="header-actions">
@@ -228,7 +230,7 @@
                         <li>CSV and JSON export</li>
                         <li>PWA-ready static delivery</li>
                     </ul>
-                    <a class="button-link ghost-button" href="#demo">Preview Starter</a>
+                    <button type="button" class="button-link ghost-button pay-plan-button" data-plan="starter">Buy Starter</button>
                 </article>
 
                 <article class="panel plan-card plan-card-featured">
@@ -241,7 +243,7 @@
                         <li>Sample data and buyer package flow</li>
                         <li>Brand customization for resale</li>
                     </ul>
-                    <a class="button-link" href="#workspace">Open Growth Demo</a>
+                    <button type="button" class="button-link pay-plan-button" data-plan="growth">Buy Growth</button>
                 </article>
 
                 <article class="panel plan-card">
@@ -254,7 +256,7 @@
                         <li>Marketplace or agency positioning</li>
                         <li>Flexible delivery workflow</li>
                     </ul>
-                    <a class="button-link ghost-button" href="#faq">See FAQ</a>
+                    <button type="button" class="button-link ghost-button pay-plan-button" data-plan="white-label">Contact for White Label</button>
                 </article>
             </div>
         </section>
@@ -268,7 +270,7 @@
             <div class="faq-grid">
                 <details class="panel faq-item" open>
                     <summary>Does this product need a backend?</summary>
-                    <p>No. The live demo and working dashboard can run entirely in the browser using local storage and offline-ready assets.</p>
+                    <p>No for the public demo. This repo now also includes an optional backend for server-side data sync and secure Stripe checkout when you want a full-stack deployment.</p>
                 </details>
 
                 <details class="panel faq-item">
@@ -356,7 +358,7 @@
             <article class="panel showcase-card">
                 <p class="showcase-kicker">Offline-Friendly</p>
                 <h2>Keep the operational footprint light.</h2>
-                <p>The current stack stays simple to host, simple to demo, and simple to hand over because it avoids backend setup.</p>
+                <p>Run the frontend on its own for static demos, or start the bundled backend when you want shared persistence and secure payment handling.</p>
             </article>
 
             <article class="panel showcase-card">
@@ -426,7 +428,7 @@
                     </div>
                 </form>
 
-                <p class="panel-footnote">Everything is stored in local browser storage, making this a low-maintenance deliverable for demos or downloadable products.</p>
+                <p class="panel-footnote">The UI still works locally-first, and it now syncs to the included backend whenever you run the bundled server.</p>
             </aside>
 
             <section class="panel table-panel">
@@ -503,6 +505,35 @@
                     </table>
                 </div>
             </section>
+        </section>
+
+
+        <section id="checkout" class="section-block">
+            <div class="section-heading">
+                <p class="eyebrow">Checkout</p>
+                <h2>Accept payments securely without exposing secret keys in the browser.</h2>
+                <p>This static version uses direct Stripe Payment Links, which fits GitHub Pages and other frontend-only hosting. Replace the placeholder links in <code>app.js</code> with your own Stripe URLs.</p>
+            </div>
+
+            <div class="plan-grid">
+                <article class="panel plan-card">
+                    <p class="plan-name">Starter Checkout</p>
+                    <p class="plan-copy">One-time purchase for the Starter package.</p>
+                    <button type="button" class="button-link pay-plan-button" data-plan="starter">Pay for Starter</button>
+                </article>
+
+                <article class="panel plan-card plan-card-featured">
+                    <p class="plan-name">Growth Checkout</p>
+                    <p class="plan-copy">Hosted Stripe checkout for the Growth package.</p>
+                    <button type="button" class="button-link pay-plan-button" data-plan="growth">Pay for Growth</button>
+                </article>
+
+                <article class="panel plan-card">
+                    <p class="plan-name">White Label</p>
+                    <p class="plan-copy">Direct prospects to a contact flow until custom pricing is defined.</p>
+                    <button type="button" class="button-link ghost-button pay-plan-button" data-plan="white-label">Request White Label Offer</button>
+                </article>
+            </div>
         </section>
 
         <footer class="app-footer">

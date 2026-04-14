@@ -47,9 +47,32 @@ https://uguraksahin.github.io/Personnel-Tracking-System/
 ## ⚡ Quick Start
 
 1. Download or clone the repository
-2. Open `index.html` in your browser
-3. Load demo data from the UI
-4. Start managing your personnel
+2. Install nothing extra if you only want the static demo
+3. Open `index.html` in your browser
+4. Load demo data from the UI
+5. Start managing your personnel
+
+## Backend Mode
+
+This repo now includes a lightweight Node backend so the same UI can:
+
+* persist personnel data on the server
+* create Stripe Checkout Sessions with your secret key kept off the client
+* serve the frontend and API together from `http://localhost:8080`
+
+Start the full app:
+
+```bash
+npm start
+```
+
+Configuration lives in `application.properties`:
+
+```properties
+server.port=8080
+stripe.secret.key=sk_test_your_key_here
+app.base-url=http://localhost:8080
+```
 
 
 ## 🛠️ Build & Packaging
