@@ -14,6 +14,7 @@ New-Item -ItemType Directory -Path $pagesDirectory -Force | Out-Null
 $filesToCopy = @(
     'index.html',
     'style.css',
+    'app-state-sync.js',
     'app.js',
     'sw.js',
     'site.webmanifest',

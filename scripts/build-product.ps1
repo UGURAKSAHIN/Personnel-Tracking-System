@@ -25,6 +25,7 @@ $filesToCopy = @(
     'package.json',
     'index.html',
     'style.css',
+    'app-state-sync.js',
     'app.js',
     'sw.js',
     'site.webmanifest',
@@ -32,10 +33,17 @@ $filesToCopy = @(
     'apple-touch-icon.png',
     'icon-192.png',
     'icon-512.png',
+    'application.properties',
+    'server.js',
     'README.md',
     'PRODUCT-LISTING.md',
     'CHANGELOG.md',
-    'scripts\build-product.ps1'
+    'STRIPE-SETUP.md',
+    'LICENSE',
+    'scripts\build-product.ps1',
+    'scripts\build-pages.ps1',
+    'tests\state-sync.test.js',
+    'tests\server.test.js'
 )
 
 foreach ($file in $filesToCopy) {

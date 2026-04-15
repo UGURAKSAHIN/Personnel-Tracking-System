@@ -1,8 +1,9 @@
-const CACHE_NAME = 'personnel-tracking-system-pro-v2';
+const CACHE_NAME = 'personnel-tracking-system-pro-v3';
 const CORE_ASSETS = [
     './',
     './index.html',
     './style.css',
+    './app-state-sync.js',
     './app.js',
     './favicon.svg',
     './apple-touch-icon.png',

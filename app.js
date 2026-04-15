@@ -27,6 +27,13 @@ const API_ROUTES = {
     checkout: '/api/checkout/session'
 };
 const STRIPE_ALLOWED_HOSTS = ['buy.stripe.com', 'pay.stripe.com'];
+const appStateSync = window.PersonnelStateSync || {
+    resolveAppStateSource: () => ({
+        reason: 'sync-helper-missing',
+        shouldSyncLocalToRemote: false,
+        source: 'remote'
+    })
+};
 
 const PAYMENT_PLANS = {
     starter: {
@@ -425,6 +432,11 @@ async function startPlanCheckout(planKey) {
     }
 
     if (plan.mode === 'contact') {
+        if (!hasConfiguredSalesContactEmail()) {
+            showToast('Set a real sales contact email in app.js to enable white-label requests.', 'error');
+            return;
+        }
+
         window.location.href = buildWhiteLabelMailto();
         showToast('White-label request prepared in your email app.');
         return;
@@ -487,6 +499,11 @@ function buildWhiteLabelMailto() {
     ];
     const body = encodeURIComponent(lines.join('\n'));
     return `mailto:${SALES_CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+}
+
+function hasConfiguredSalesContactEmail() {
+    const email = String(SALES_CONTACT_EMAIL || '').trim().toLowerCase();
+    return EMAIL_PATTERN.test(email) && !email.endsWith('@example.com');
 }
 
 function persistCheckoutIntent(intent) {
@@ -1161,9 +1178,20 @@ async function hydrateRemoteState() {
         return;
     }
 
+    state.backendAvailable = true;
+    const localState = getCurrentAppState();
+    const resolution = appStateSync.resolveAppStateSource(localState, remoteState);
+
+    if (resolution.source === 'local') {
+        await syncRemoteState({
+            payload: localState,
+            suppressErrorToast: true
+        });
+        return;
+    }
+
     state.personnel = remoteState.personnel;
     state.settings = remoteState.settings;
-    state.backendAvailable = true;
     persistPersonnel();
     persistSettings();
 
@@ -1188,25 +1216,28 @@ async function fetchRemoteState() {
     }
 }
 
-async function syncRemoteState() {
+async function syncRemoteState({ payload = null, suppressErrorToast = false } = {}) {
     if (!state.backendAvailable) {
         return false;
     }
 
     try {
+        const appState = serializeAppState(payload || getCurrentAppState());
+
         await requestJson(API_ROUTES.appState, {
             method: 'PUT',
-            body: JSON.stringify({
-                settings: { ...state.settings },
-                personnel: state.personnel.map(stripDerivedFields)
-            })
+            body: JSON.stringify(appState)
         });
 
         return true;
     } catch (error) {
         console.warn('Backend sync failed. Falling back to local storage.', error);
         state.backendAvailable = false;
-        showToast('Backend sync failed. Changes are stored locally in this browser.', 'error');
+
+        if (!suppressErrorToast) {
+            showToast('Backend sync failed. Changes are stored locally in this browser.', 'error');
+        }
+
         return false;
     }
 }
@@ -1264,6 +1295,22 @@ function resolveApiUrl(route) {
         : DEFAULT_API_BASE_URL;
 
     return new URL(route, `${baseUrl.replace(/\/$/, '')}/`).toString();
+}
+
+function getCurrentAppState() {
+    return {
+        settings: sanitizeSettings(state.settings),
+        personnel: Array.isArray(state.personnel) ? [...state.personnel] : []
+    };
+}
+
+function serializeAppState(appState) {
+    return {
+        settings: sanitizeSettings(appState?.settings),
+        personnel: Array.isArray(appState?.personnel)
+            ? appState.personnel.map(stripDerivedFields)
+            : []
+    };
 }
 
 function sanitizePerson(person) {
