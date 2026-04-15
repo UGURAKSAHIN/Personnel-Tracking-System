@@ -66,6 +66,12 @@ Start the full app:
 npm start
 ```
 
+Run the automated smoke tests:
+
+```bash
+npm run test
+```
+
 Configuration lives in `application.properties`:
 
 ```properties
@@ -94,6 +100,8 @@ npm run build:package
 ```
 dist/package/
 ```
+
+The package bundle now includes the backend runtime (`server.js`), checkout configuration (`application.properties`), Stripe setup notes, and the smoke tests.
 
 
 

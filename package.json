@@ -5,8 +5,9 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "check": "node --check app.js && node --check sw.js && node --check server.js",
+    "check": "node --check app-state-sync.js && node --check app.js && node --check sw.js && node --check server.js && node --check tests/state-sync.test.js && node --check tests/server.test.js",
     "start": "node server.js",
+    "test": "node --test",
     "build:package": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-product.ps1",
     "build:pages": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-pages.ps1"
   },
