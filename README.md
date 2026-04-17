@@ -54,11 +54,12 @@ https://uguraksahin.github.io/Personnel-Tracking-System/
 
 ## Backend Mode
 
-This repo now includes a lightweight Node backend so the same UI can:
+This repo includes a lightweight Node backend so the same UI can:
 
 * persist personnel data on the server
 * create Stripe Checkout Sessions with your secret key kept off the client
 * serve the frontend and API together from `http://localhost:8080`
+* receive and verify Stripe webhook events
 
 Start the full app:
 
@@ -72,13 +73,30 @@ Run the automated smoke tests:
 npm run test
 ```
 
-Configuration lives in `application.properties`:
+### Configuration
+
+Settings live in `application.properties` (committed with safe placeholder values).  
+**Environment variables take precedence** and are the recommended way to supply secrets in production.
+
+| Environment variable | `application.properties` key | Default | Description |
+|---------------------|------------------------------|---------|-------------|
+| `STRIPE_SECRET_KEY` | `stripe.secret.key` | *(none)* | Stripe secret key (`sk_test_…` / `sk_live_…`) |
+| `STRIPE_WEBHOOK_SECRET` | `stripe.webhook.secret` | *(none)* | Stripe webhook signing secret (`whsec_…`) |
+| `BASE_URL` | `app.base-url` | `http://localhost:8080` | Public URL of the deployed app |
+| `PORT` | `server.port` | `8080` | Port the server listens on |
+
+Example `application.properties` for local development:
 
 ```properties
 server.port=8080
-stripe.secret.key=sk_test_your_key_here
+stripe.secret.key=sk_test_YOUR_TEST_KEY_HERE
+stripe.webhook.secret=whsec_YOUR_WEBHOOK_SECRET_HERE
 app.base-url=http://localhost:8080
 ```
+
+> **Never commit real Stripe keys.** Use environment variables or keep `application.properties` out of version control when it contains real keys.
+
+See [STRIPE-SETUP.md](./STRIPE-SETUP.md) for full Stripe configuration and webhook setup instructions.
 
 
 ## 🛠️ Build & Packaging

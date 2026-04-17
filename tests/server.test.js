@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
+const crypto = require('node:crypto');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
@@ -64,7 +65,96 @@ test('server persists app state and protects checkout until Stripe is configured
     assert.match(checkoutResponse.payload.message, /not configured/i);
 });
 
-async function startServerFixture() {
+test('webhook endpoint rejects requests when webhook secret is not set', async (t) => {
+    const fixture = await startServerFixture({ stripeWebhookSecret: '' });
+    t.after(async () => { await fixture.close(); });
+
+    const response = await requestRaw(`${fixture.baseUrl}/api/webhook/stripe`, {
+        method: 'POST',
+        body: '{}',
+        headers: { 'Content-Type': 'application/json' }
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.match(response.payload.message, /not configured/i);
+});
+
+test('webhook endpoint rejects requests with invalid signature', async (t) => {
+    const webhookSecret = 'whsec_test_secret_for_sig_test';
+    const fixture = await startServerFixture({ stripeWebhookSecret: webhookSecret });
+    t.after(async () => { await fixture.close(); });
+
+    const recentTimestamp = Math.floor(Date.now() / 1000);
+
+    const response = await requestRaw(`${fixture.baseUrl}/api/webhook/stripe`, {
+        method: 'POST',
+        body: '{"type":"checkout.session.completed"}',
+        headers: {
+            'Content-Type': 'application/json',
+            'stripe-signature': `t=${recentTimestamp},v1=0000000000000000000000000000000000000000000000000000000000000000`
+        }
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.match(response.payload.message, /verification failed/i);
+});
+
+test('webhook endpoint accepts requests with valid signature', async (t) => {
+    const webhookSecret = 'whsec_test_secret_for_valid_test';
+    const fixture = await startServerFixture({ stripeWebhookSecret: webhookSecret });
+    t.after(async () => { await fixture.close(); });
+
+    const body = JSON.stringify({
+        type: 'checkout.session.completed',
+        data: {
+            object: {
+                id: 'cs_test_123',
+                metadata: { plan_key: 'starter' },
+                client_reference_id: 'pts_starter_test'
+            }
+        }
+    });
+
+    const timestamp = Math.floor(Date.now() / 1000);
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(`${timestamp}.${body}`);
+    const signature = hmac.digest('hex');
+    const stripeSignature = `t=${timestamp},v1=${signature}`;
+
+    const response = await requestRaw(`${fixture.baseUrl}/api/webhook/stripe`, {
+        method: 'POST',
+        body,
+        headers: {
+            'Content-Type': 'application/json',
+            'stripe-signature': stripeSignature
+        }
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.payload.received, true);
+});
+
+test('loadConfig reads stripe keys from environment variables', async (t) => {
+    const fixture = await startServerFixture({
+        stripeSecretKeyEnv: 'sk_test_envoverride1234567890',
+        stripeWebhookSecretEnv: 'whsec_envoverride'
+    });
+    t.after(async () => { await fixture.close(); });
+
+    const checkoutResponse = await requestJson(`${fixture.baseUrl}/api/checkout/session`, {
+        body: { planKey: 'starter' },
+        method: 'POST'
+    });
+
+    assert.notEqual(checkoutResponse.statusCode, 503, 'Stripe key from env should pass the configuration check');
+});
+
+async function startServerFixture({
+    stripeSecretKey = 'sk_test_REPLACE_WITH_YOUR_KEY',
+    stripeWebhookSecret = '',
+    stripeSecretKeyEnv = '',
+    stripeWebhookSecretEnv = ''
+} = {}) {
     const port = await getAvailablePort();
     const tempDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'pts-server-test-'));
 
@@ -73,14 +163,20 @@ async function startServerFixture() {
         path.join(tempDirectory, 'application.properties'),
         [
             `server.port=${port}`,
-            'stripe.secret.key=sk_test_SENIN_TEST_KEYIN',
+            `stripe.secret.key=${stripeSecretKey}`,
+            `stripe.webhook.secret=${stripeWebhookSecret}`,
             `app.base-url=http://127.0.0.1:${port}`
         ].join('\n'),
         'utf8'
     );
 
+    const spawnEnv = { ...process.env };
+    if (stripeSecretKeyEnv) spawnEnv.STRIPE_SECRET_KEY = stripeSecretKeyEnv;
+    if (stripeWebhookSecretEnv) spawnEnv.STRIPE_WEBHOOK_SECRET = stripeWebhookSecretEnv;
+
     const child = spawn(process.execPath, ['server.js'], {
         cwd: tempDirectory,
+        env: spawnEnv,
         stdio: ['ignore', 'pipe', 'pipe']
     });
 
@@ -199,6 +295,51 @@ function requestJson(url, { body, method = 'GET' } = {}) {
 
         if (body !== undefined) {
             request.write(JSON.stringify(body));
+        }
+
+        request.end();
+    });
+}
+
+function requestRaw(url, { body, method = 'POST', headers = {} } = {}) {
+    return new Promise((resolve, reject) => {
+        const defaultHeaders = {
+            Accept: 'application/json',
+            'Content-Length': body ? Buffer.byteLength(body) : 0
+        };
+
+        const request = http.request(url, {
+            headers: { ...defaultHeaders, ...headers },
+            method
+        }, (response) => {
+            let rawBody = '';
+
+            response.setEncoding('utf8');
+            response.on('data', (chunk) => {
+                rawBody += chunk;
+            });
+
+            response.on('end', () => {
+                let payload = null;
+
+                try {
+                    payload = rawBody ? JSON.parse(rawBody) : null;
+                } catch (error) {
+                    reject(error);
+                    return;
+                }
+
+                resolve({
+                    payload,
+                    statusCode: response.statusCode || 0
+                });
+            });
+        });
+
+        request.on('error', reject);
+
+        if (body !== undefined) {
+            request.write(body);
         }
 
         request.end();
