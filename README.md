@@ -76,7 +76,7 @@ Configuration lives in `application.properties`:
 
 ```properties
 server.port=8080
-stripe.secret.key=sk_test_your_key_here
+stripe.secret.key=${STRIPE_SECRET_KEY}
 app.base-url=http://localhost:8080
 ```
 

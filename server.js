@@ -115,6 +115,11 @@ async function handleApiRequest(request, response, requestUrl, config) {
             return;
         }
 
+        if (request.method === 'POST' && requestUrl.pathname === '/api/webhook/stripe') {
+            await handleStripeWebhook(request, response, config);
+            return;
+        }
+
         sendJson(response, 404, { message: 'API route not found.' }, { cors: true });
     } catch (error) {
         sendJson(response, error.statusCode ?? 500, {
@@ -184,13 +189,14 @@ function resolveStaticPath(requestPath) {
 async function loadConfig() {
     const rawConfig = await fs.readFile(CONFIG_FILE_PATH, 'utf8').catch(() => '');
     const properties = parseProperties(rawConfig);
-    const port = sanitizePort(properties['server.port']);
-    const baseUrl = normalizeBaseUrl(properties['app.base-url'], port);
+    const port = sanitizePort(process.env.PORT || properties['server.port']);
+    const baseUrl = normalizeBaseUrl(process.env.BASE_URL || properties['app.base-url'], port);
 
     return {
         port,
         baseUrl,
-        stripeSecretKey: String(properties['stripe.secret.key'] || '').trim()
+        stripeSecretKey: String(process.env.STRIPE_SECRET_KEY || properties['stripe.secret.key'] || '').trim(),
+        stripeWebhookSecret: String(process.env.STRIPE_WEBHOOK_SECRET || properties['stripe.webhook.secret'] || '').trim()
     };
 }
 
@@ -387,7 +393,7 @@ async function createCheckoutSession(payload, config) {
         throw createHttpError(400, 'Unsupported plan selected.');
     }
 
-    if (!config.stripeSecretKey || config.stripeSecretKey.includes('SENIN_TEST_KEYIN')) {
+    if (!isValidStripeSecretKey(config.stripeSecretKey)) {
         throw createHttpError(503, 'Stripe secret key is not configured yet.');
     }
 
@@ -455,6 +461,111 @@ async function createCheckoutSession(payload, config) {
         reference: checkoutReference,
         planKey
     };
+}
+
+function isValidStripeSecretKey(key) {
+    return typeof key === 'string' && /^sk_(test|live)_[A-Za-z0-9]{10,}$/.test(key);
+}
+
+async function handleStripeWebhook(request, response, config) {
+    if (!config.stripeWebhookSecret) {
+        console.warn('Stripe webhook received but stripe.webhook.secret is not configured.');
+        sendJson(response, 400, { message: 'Webhook secret is not configured.' });
+        return;
+    }
+
+    const rawBody = await readRawBody(request);
+    const signatureHeader = String(request.headers['stripe-signature'] || '');
+
+    if (!verifyStripeSignature(rawBody, signatureHeader, config.stripeWebhookSecret)) {
+        sendJson(response, 400, { message: 'Webhook signature verification failed.' });
+        return;
+    }
+
+    let event;
+    try {
+        event = JSON.parse(rawBody.toString('utf8'));
+    } catch (error) {
+        sendJson(response, 400, { message: 'Invalid webhook payload.' });
+        return;
+    }
+
+    const eventType = String(event?.type || '');
+
+    if (eventType === 'checkout.session.completed') {
+        const session = event.data?.object;
+        console.log(
+            `Stripe checkout completed: session=${session?.id} ` +
+            `plan=${session?.metadata?.plan_key} ` +
+            `reference=${session?.client_reference_id}`
+        );
+    }
+
+    sendJson(response, 200, { received: true });
+}
+
+function verifyStripeSignature(rawBody, signatureHeader, secret) {
+    try {
+        const parts = String(signatureHeader).split(',');
+        const timestampEntry = parts.find((p) => p.startsWith('t='));
+        const signatureEntry = parts.find((p) => p.startsWith('v1='));
+
+        if (!timestampEntry || !signatureEntry) return false;
+
+        const timestamp = timestampEntry.slice(2);
+        const providedSignature = signatureEntry.slice(3);
+
+        if (!timestamp || !providedSignature) return false;
+
+        const webhookTimestamp = Number(timestamp);
+        const currentTimestamp = Math.floor(Date.now() / 1000);
+
+        if (Math.abs(currentTimestamp - webhookTimestamp) > 300) return false;
+
+        const bodyBuffer = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(rawBody, 'utf8');
+        const signedPayload = Buffer.concat([
+            Buffer.from(timestamp, 'utf8'),
+            Buffer.from('.', 'utf8'),
+            bodyBuffer
+        ]);
+
+        const hmac = crypto.createHmac('sha256', secret);
+        hmac.update(signedPayload);
+        const computedSignature = hmac.digest('hex');
+
+        const computedBuffer = Buffer.from(computedSignature, 'hex');
+        let providedBuffer;
+
+        try {
+            providedBuffer = Buffer.from(providedSignature, 'hex');
+        } catch (error) {
+            return false;
+        }
+
+        if (computedBuffer.length !== providedBuffer.length) return false;
+
+        return crypto.timingSafeEqual(computedBuffer, providedBuffer);
+    } catch (error) {
+        return false;
+    }
+}
+
+async function readRawBody(request) {
+    const chunks = [];
+    let totalLength = 0;
+
+    for await (const chunk of request) {
+        const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+        totalLength += buffer.length;
+
+        if (totalLength > 1_000_000) {
+            throw createHttpError(413, 'Request body is too large.');
+        }
+
+        chunks.push(buffer);
+    }
+
+    return Buffer.concat(chunks);
 }
 
 function createCheckoutReference(planKey) {

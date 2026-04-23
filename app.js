@@ -320,6 +320,33 @@ async function initializeDemoExperience() {
 
 function initializeCheckoutExperience() {
     document.addEventListener('click', handlePayPlanClick);
+    handleCheckoutReturn();
+}
+
+function handleCheckoutReturn() {
+    const query = new URLSearchParams(window.location.search);
+    const checkoutStatus = query.get('checkout');
+
+    if (!checkoutStatus) return;
+
+    try {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('checkout');
+        cleanUrl.searchParams.delete('session_id');
+        cleanUrl.searchParams.delete('plan');
+        const search = cleanUrl.searchParams.toString();
+        window.history.replaceState(null, '', cleanUrl.pathname + (search ? `?${search}` : '') + cleanUrl.hash);
+    } catch (error) {
+        // ignore history replace failures
+    }
+
+    if (checkoutStatus === 'success') {
+        showToast('Payment successful! Your purchase is confirmed.', 'success');
+        navigateToSection('checkout');
+    } else if (checkoutStatus === 'cancel') {
+        showToast('Checkout cancelled. You can try again whenever you are ready.', 'error');
+        navigateToSection('checkout');
+    }
 }
 
 function handleSectionLinkClick(event) {
@@ -1252,9 +1279,25 @@ async function createBackendCheckoutSession(planKey) {
         state.backendAvailable = true;
         return payload;
     } catch (error) {
+        const message = String(error?.message || '');
         console.warn('Secure checkout is unavailable.', error);
+
+        if (message && !isNetworkError(message)) {
+            showToast(message, 'error');
+            return null;
+        }
+
         return null;
     }
+}
+
+function isNetworkError(message) {
+    return (
+        message.toLowerCase().includes('failed to fetch') ||
+        message.toLowerCase().includes('networkerror') ||
+        message.toLowerCase().includes('network request failed') ||
+        message.startsWith('Request failed with status')
+    );
 }
 
 async function requestJson(route, options = {}) {
