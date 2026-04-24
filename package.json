@@ -17,8 +17,5 @@
     "dashboard",
     "template",
     "pwa"
-  ],
-  "dependencies": {
-    "@vercel/speed-insights": "^2.0.0"
-  }
+  ]
 }
