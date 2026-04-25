@@ -12,16 +12,7 @@
     <link rel="manifest" href="site.webmanifest">
     <link rel="stylesheet" href="style.css">
     <script>
-        (function () {
-            var hostname = window.location.hostname;
-            var isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
-
-            if (isLocalHost) {
-                return;
-            }
-
-            window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
-        }());
+        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
     </script>
     <script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
