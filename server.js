@@ -7,12 +7,15 @@ const ROOT_DIR = __dirname;
 const CONFIG_FILE_PATH = path.join(ROOT_DIR, 'application.properties');
 const DATA_DIR_PATH = path.join(ROOT_DIR, 'data');
 const APP_STATE_FILE_PATH = path.join(DATA_DIR_PATH, 'personnel-tracking-state.json');
+const ENV_FILE_CANDIDATES = ['.env.local', '.env'];
 
 const DEFAULT_PORT = 8080;
 const DEFAULT_CURRENCY = 'USD';
 const DEFAULT_STATUS = 'Active';
+const DEFAULT_APP_STATE_REDIS_KEY = 'personnel-tracking-system-pro:app-state';
 const SUPPORTED_CURRENCIES = new Set(['USD', 'EUR', 'TRY', 'GBP']);
 const STATUS_OPTIONS = new Set(['Active', 'Probation', 'On Leave', 'Inactive']);
+let redisClientPromise = null;
 
 const PLAN_CATALOG = {
     starter: {
@@ -43,10 +46,12 @@ const MIME_TYPES = {
     '.xml': 'application/xml; charset=utf-8'
 };
 
-startServer().catch((error) => {
-    console.error('Server failed to start.', error);
-    process.exit(1);
-});
+if (require.main === module) {
+    startServer().catch((error) => {
+        console.error('Server failed to start.', error);
+        process.exit(1);
+    });
+}
 
 async function startServer() {
     const config = await loadConfig();
@@ -187,17 +192,96 @@ function resolveStaticPath(requestPath) {
 }
 
 async function loadConfig() {
+    const envOverrides = await loadEnvOverrides();
     const rawConfig = await fs.readFile(CONFIG_FILE_PATH, 'utf8').catch(() => '');
     const properties = parseProperties(rawConfig);
-    const port = sanitizePort(process.env.PORT || properties['server.port']);
-    const baseUrl = normalizeBaseUrl(process.env.BASE_URL || properties['app.base-url'], port);
+    const port = sanitizePort(readConfigValue('PORT', properties['server.port'], envOverrides));
+    const baseUrl = normalizeBaseUrl(readConfigValue('BASE_URL', properties['app.base-url'], envOverrides), port);
 
     return {
         port,
         baseUrl,
-        stripeSecretKey: String(process.env.STRIPE_SECRET_KEY || properties['stripe.secret.key'] || '').trim(),
-        stripeWebhookSecret: String(process.env.STRIPE_WEBHOOK_SECRET || properties['stripe.webhook.secret'] || '').trim()
+        stripeSecretKey: String(readConfigValue('STRIPE_SECRET_KEY', properties['stripe.secret.key'], envOverrides)).trim(),
+        stripeWebhookSecret: String(readConfigValue('STRIPE_WEBHOOK_SECRET', properties['stripe.webhook.secret'], envOverrides)).trim()
     };
+}
+
+async function loadEnvOverrides() {
+    const overrides = {};
+
+    for (const fileName of ENV_FILE_CANDIDATES) {
+        const filePath = path.join(ROOT_DIR, fileName);
+        const content = await fs.readFile(filePath, 'utf8').catch(() => '');
+
+        if (!content) {
+            continue;
+        }
+
+        Object.assign(overrides, parseEnvFile(content));
+    }
+
+    return overrides;
+}
+
+function readConfigValue(envKey, propertyValue, envOverrides) {
+    const processValue = String(process.env[envKey] || '').trim();
+
+    if (processValue) {
+        return processValue;
+    }
+
+    const envFileValue = String(envOverrides?.[envKey] || '').trim();
+
+    if (envFileValue) {
+        return envFileValue;
+    }
+
+    return propertyValue || '';
+}
+
+function parseEnvFile(content) {
+    return String(content)
+        .split(/\r?\n/)
+        .reduce((values, rawLine) => {
+            const line = rawLine.trim();
+
+            if (!line || line.startsWith('#')) {
+                return values;
+            }
+
+            const normalizedLine = line.startsWith('export ')
+                ? line.slice('export '.length).trim()
+                : line;
+            const separatorIndex = normalizedLine.indexOf('=');
+
+            if (separatorIndex <= 0) {
+                return values;
+            }
+
+            const key = normalizedLine.slice(0, separatorIndex).trim();
+            const rawValue = normalizedLine.slice(separatorIndex + 1).trim();
+
+            if (!key) {
+                return values;
+            }
+
+            values[key] = normalizeEnvValue(rawValue);
+            return values;
+        }, {});
+}
+
+function normalizeEnvValue(value) {
+    if (!value) {
+        return '';
+    }
+
+    const quote = value[0];
+    if ((quote === '"' || quote === "'") && value.endsWith(quote)) {
+        return value.slice(1, -1);
+    }
+
+    const commentIndex = value.indexOf(' #');
+    return commentIndex >= 0 ? value.slice(0, commentIndex).trim() : value;
 }
 
 function parseProperties(content) {
@@ -239,6 +323,12 @@ function normalizeBaseUrl(value, port) {
 }
 
 async function readAppState() {
+    const redisState = await readAppStateFromRedis();
+
+    if (redisState) {
+        return redisState;
+    }
+
     try {
         const rawState = await fs.readFile(APP_STATE_FILE_PATH, 'utf8');
         return normalizeAppState(JSON.parse(rawState));
@@ -256,9 +346,104 @@ async function readAppState() {
 }
 
 async function writeAppState(appState) {
+    const didWriteToRedis = await writeAppStateToRedis(appState);
+
+    if (didWriteToRedis) {
+        return appState;
+    }
+
+    if (process.env.VERCEL) {
+        throw createHttpError(
+            503,
+            'Persistent storage is not configured. Add the Upstash Redis integration in Vercel.'
+        );
+    }
+
     await fs.mkdir(DATA_DIR_PATH, { recursive: true });
     await fs.writeFile(APP_STATE_FILE_PATH, JSON.stringify(appState, null, 2));
     return appState;
+}
+
+async function readAppStateFromRedis() {
+    const redis = await getRedisClient();
+
+    if (!redis) {
+        return null;
+    }
+
+    const storedState = await redis.get(getAppStateRedisKey());
+
+    if (!storedState) {
+        return null;
+    }
+
+    if (typeof storedState === 'string') {
+        try {
+            return normalizeAppState(JSON.parse(storedState));
+        } catch (error) {
+            return createDefaultAppState();
+        }
+    }
+
+    return normalizeAppState(storedState);
+}
+
+async function writeAppStateToRedis(appState) {
+    const redis = await getRedisClient();
+
+    if (!redis) {
+        return false;
+    }
+
+    await redis.set(getAppStateRedisKey(), appState);
+    return true;
+}
+
+async function getRedisClient() {
+    if (!isRedisStorageConfigured()) {
+        return null;
+    }
+
+    if (!redisClientPromise) {
+        redisClientPromise = import('@upstash/redis')
+            .then((module) => {
+                if (!module.Redis?.fromEnv) {
+                    throw new Error('Redis.fromEnv is not available.');
+                }
+
+                const redisCredentials = getRedisCredentials();
+
+                return new module.Redis({
+                    url: redisCredentials.url,
+                    token: redisCredentials.token
+                });
+            })
+            .catch((error) => {
+                redisClientPromise = null;
+                throw createHttpError(
+                    500,
+                    `Upstash Redis is configured, but @upstash/redis could not be loaded: ${error.message}`
+                );
+            });
+    }
+
+    return redisClientPromise;
+}
+
+function isRedisStorageConfigured() {
+    const redisCredentials = getRedisCredentials();
+    return Boolean(redisCredentials.url && redisCredentials.token);
+}
+
+function getRedisCredentials() {
+    return {
+        url: process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || '',
+        token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || ''
+    };
+}
+
+function getAppStateRedisKey() {
+    return process.env.APP_STATE_REDIS_KEY || DEFAULT_APP_STATE_REDIS_KEY;
 }
 
 function createDefaultAppState() {
@@ -437,7 +622,8 @@ async function createCheckoutSession(payload, config) {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${config.stripeSecretKey}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Stripe-Version': '2026-02-25.clover'
         },
         body: formData
     });
@@ -551,6 +737,10 @@ function verifyStripeSignature(rawBody, signatureHeader, secret) {
 }
 
 async function readRawBody(request) {
+    if (request.body !== undefined) {
+        return normalizeRawBody(request.body);
+    }
+
     const chunks = [];
     let totalLength = 0;
 
@@ -581,6 +771,10 @@ function sanitizeStripeReference(value) {
 }
 
 async function readJsonBody(request) {
+    if (request.body !== undefined) {
+        return normalizeJsonBody(request.body);
+    }
+
     let body = '';
 
     for await (const chunk of request) {
@@ -600,6 +794,46 @@ async function readJsonBody(request) {
     } catch (error) {
         throw createHttpError(400, 'Request body must be valid JSON.');
     }
+}
+
+function normalizeRawBody(body) {
+    if (Buffer.isBuffer(body)) {
+        return body;
+    }
+
+    if (typeof body === 'string') {
+        return Buffer.from(body, 'utf8');
+    }
+
+    if (body && typeof body === 'object') {
+        return Buffer.from(JSON.stringify(body), 'utf8');
+    }
+
+    return Buffer.alloc(0);
+}
+
+function normalizeJsonBody(body) {
+    if (Buffer.isBuffer(body)) {
+        return normalizeJsonBody(body.toString('utf8'));
+    }
+
+    if (typeof body === 'string') {
+        if (!body) {
+            return {};
+        }
+
+        try {
+            return JSON.parse(body);
+        } catch (error) {
+            throw createHttpError(400, 'Request body must be valid JSON.');
+        }
+    }
+
+    if (body && typeof body === 'object') {
+        return body;
+    }
+
+    return {};
 }
 
 function sendJson(response, statusCode, payload, { cors = false } = {}) {
@@ -654,3 +888,9 @@ function createHttpError(statusCode, message) {
 function isApiRequest(requestUrl) {
     return String(requestUrl || '').startsWith('/api/');
 }
+
+module.exports = {
+    handleRequest,
+    loadConfig,
+    startServer
+};

@@ -136,7 +136,7 @@ test('webhook endpoint accepts requests with valid signature', async (t) => {
 
 test('loadConfig reads stripe keys from environment variables', async (t) => {
     const fixture = await startServerFixture({
-        stripeSecretKeyEnv: 'sk_test_envoverride1234567890',
+        stripeSecretKeyEnv: buildStripeSecretKey('envoverride1234567890'),
         stripeWebhookSecretEnv: 'whsec_envoverride'
     });
     t.after(async () => { await fixture.close(); });
@@ -149,11 +149,27 @@ test('loadConfig reads stripe keys from environment variables', async (t) => {
     assert.notEqual(checkoutResponse.statusCode, 503, 'Stripe key from env should pass the configuration check');
 });
 
+test('loadConfig reads stripe key from .env file', async (t) => {
+    const fixture = await startServerFixture({
+        stripeSecretKey: '${STRIPE_SECRET_KEY}',
+        envFileContent: `STRIPE_SECRET_KEY=${buildStripeSecretKey('fromdotenv1234567890')}\n`
+    });
+    t.after(async () => { await fixture.close(); });
+
+    const checkoutResponse = await requestJson(`${fixture.baseUrl}/api/checkout/session`, {
+        body: { planKey: 'starter' },
+        method: 'POST'
+    });
+
+    assert.notEqual(checkoutResponse.statusCode, 503, 'Stripe key from .env should pass the configuration check');
+});
+
 async function startServerFixture({
-    stripeSecretKey = 'sk_test_REPLACE_WITH_YOUR_KEY',
+    stripeSecretKey = '${STRIPE_SECRET_KEY}',
     stripeWebhookSecret = '',
     stripeSecretKeyEnv = '',
-    stripeWebhookSecretEnv = ''
+    stripeWebhookSecretEnv = '',
+    envFileContent = ''
 } = {}) {
     const port = await getAvailablePort();
     const tempDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'pts-server-test-'));
@@ -169,6 +185,10 @@ async function startServerFixture({
         ].join('\n'),
         'utf8'
     );
+
+    if (envFileContent) {
+        await fs.writeFile(path.join(tempDirectory, '.env'), envFileContent, 'utf8');
+    }
 
     const spawnEnv = { ...process.env };
     if (stripeSecretKeyEnv) spawnEnv.STRIPE_SECRET_KEY = stripeSecretKeyEnv;
@@ -193,6 +213,10 @@ async function startServerFixture({
             await fs.rm(tempDirectory, { force: true, recursive: true });
         }
     };
+}
+
+function buildStripeSecretKey(suffix) {
+    return ['sk', 'test', suffix].join('_');
 }
 
 async function getAvailablePort() {

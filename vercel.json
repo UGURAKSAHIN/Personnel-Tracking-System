@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build:vercel",
+  "functions": {
+    "api/[...path].js": {
+      "includeFiles": "application.properties"
+    }
+  },
+  "outputDirectory": "public"
+}
