@@ -4,10 +4,14 @@
   "description": "Offline-ready personnel dashboard packaged for demos, delivery, and digital product sales.",
   "private": true,
   "license": "MIT",
+  "dependencies": {
+    "@upstash/redis": "^1.35.3"
+  },
   "scripts": {
     "check": "node --check app-state-sync.js && node --check app.js && node --check sw.js && node --check server.js && node --check tests/state-sync.test.js && node --check tests/server.test.js",
     "start": "node server.js",
     "test": "node --test",
+    "build:vercel": "node scripts/build-vercel.js",
     "build:package": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-product.ps1",
     "build:pages": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-pages.ps1"
   },

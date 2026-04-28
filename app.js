@@ -187,6 +187,9 @@ const elements = {
     departmentCountStat: qs('departmentCountStat'),
     payrollTotalStat: qs('payrollTotalStat'),
     payrollCaption: qs('payrollCaption'),
+    checkoutEmail: qs('checkoutEmail'),
+    checkoutCompanyName: qs('checkoutCompanyName'),
+    checkoutTeamSize: qs('checkoutTeamSize'),
     toast: qs('toast'),
     yearStamp: qs('yearStamp'),
     demoNotice: qs('demoNotice')
@@ -469,16 +472,29 @@ async function startPlanCheckout(planKey) {
         return;
     }
 
+    const checkoutDetails = getCheckoutCustomerDetails();
+
+    if (!checkoutDetails) {
+        return;
+    }
+
     if (plan.provider === 'stripe-checkout-session') {
         showToast('Preparing secure checkout...');
 
-        const checkoutSession = await createBackendCheckoutSession(planKey);
+        const checkoutReference = createCheckoutReference(planKey);
+        const checkoutSession = await createBackendCheckoutSession(planKey, {
+            ...checkoutDetails,
+            checkoutReference
+        });
 
         if (checkoutSession) {
             persistCheckoutIntent({
-                reference: checkoutSession.reference || createCheckoutReference(planKey),
+                reference: checkoutSession.reference || checkoutReference,
                 planKey,
                 sessionId: checkoutSession.sessionId || '',
+                customerEmail: checkoutDetails.customerEmail,
+                companyName: checkoutDetails.companyName,
+                teamSize: checkoutDetails.teamSize,
                 createdAt: new Date().toISOString()
             });
 
@@ -499,7 +515,8 @@ async function startPlanCheckout(planKey) {
     const checkoutReference = createCheckoutReference(planKey);
     const stripeCheckoutUrl = buildStripePaymentLink(plan.checkoutUrl, {
         checkoutReference,
-        planKey
+        planKey,
+        ...checkoutDetails
     });
 
     if (!stripeCheckoutUrl) {
@@ -510,11 +527,32 @@ async function startPlanCheckout(planKey) {
     persistCheckoutIntent({
         reference: checkoutReference,
         planKey,
+        customerEmail: checkoutDetails.customerEmail,
+        companyName: checkoutDetails.companyName,
+        teamSize: checkoutDetails.teamSize,
         createdAt: new Date().toISOString()
     });
 
     showToast(`${plan.name} checkout is opening in Stripe.`);
     window.location.assign(stripeCheckoutUrl);
+}
+
+function getCheckoutCustomerDetails() {
+    const customerEmail = String(elements.checkoutEmail?.value || '').trim().toLowerCase();
+    const companyName = String(elements.checkoutCompanyName?.value || '').trim();
+    const teamSize = String(elements.checkoutTeamSize?.value || '').trim();
+
+    if (customerEmail && !EMAIL_PATTERN.test(customerEmail)) {
+        showToast('Enter a valid receipt email before checkout.', 'error');
+        elements.checkoutEmail?.focus();
+        return null;
+    }
+
+    return {
+        customerEmail,
+        companyName,
+        teamSize
+    };
 }
 
 function buildWhiteLabelMailto() {
@@ -1269,11 +1307,17 @@ async function syncRemoteState({ payload = null, suppressErrorToast = false } = 
     }
 }
 
-async function createBackendCheckoutSession(planKey) {
+async function createBackendCheckoutSession(planKey, checkoutDetails = {}) {
     try {
         const payload = await requestJson(API_ROUTES.checkout, {
             method: 'POST',
-            body: JSON.stringify({ planKey })
+            body: JSON.stringify({
+                planKey,
+                customerEmail: checkoutDetails.customerEmail || '',
+                companyName: checkoutDetails.companyName || '',
+                teamSize: checkoutDetails.teamSize || '',
+                checkoutReference: checkoutDetails.checkoutReference || ''
+            })
         });
 
         state.backendAvailable = true;

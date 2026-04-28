@@ -1,0 +1,9 @@
+.env
+.git
+.github
+.vscode
+data
+dist
+node_modules
+public
+tests

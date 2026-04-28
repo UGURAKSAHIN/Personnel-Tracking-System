@@ -647,6 +647,23 @@ textarea {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.checkout-details {
+    margin-bottom: 16px;
+    padding: 24px;
+}
+
+.checkout-details h3 {
+    margin: 0;
+    font-family: var(--display-font);
+    font-size: 1.45rem;
+}
+
+.checkout-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
 .plan-card {
     display: grid;
     align-content: start;
@@ -1131,6 +1148,7 @@ tbody tr:last-child td {
     .value-grid,
     .feature-grid,
     .plan-grid,
+    .checkout-fields,
     .faq-grid,
     .app-footer {
         grid-template-columns: 1fr;

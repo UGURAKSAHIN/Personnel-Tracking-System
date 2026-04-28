@@ -516,10 +516,40 @@
             <div class="section-heading">
                 <p class="eyebrow">Checkout</p>
                 <h2>Accept payments securely without exposing secret keys in the browser.</h2>
-                <p>This static version uses direct Stripe Payment Links, which fits GitHub Pages and other frontend-only hosting. Replace the placeholder links in <code>app.js</code> with your own Stripe URLs.</p>
+                <p>The buttons below create a Stripe Checkout Session through the bundled backend, then redirect buyers to Stripe-hosted payment pages.</p>
             </div>
 
-            <div class="plan-grid">
+            <div class="panel checkout-details" aria-labelledby="checkoutDetailsTitle">
+                <div class="panel-heading">
+                    <h3 id="checkoutDetailsTitle">Buyer details</h3>
+                    <p class="panel-copy">Optional details are attached to the Checkout Session for receipts and order follow-up.</p>
+                </div>
+
+                <div class="checkout-fields">
+                    <label class="field" for="checkoutEmail">
+                        <span>Email for receipt</span>
+                        <input id="checkoutEmail" name="customerEmail" type="email" autocomplete="email" placeholder="buyer@example.com">
+                    </label>
+
+                    <label class="field" for="checkoutCompanyName">
+                        <span>Company</span>
+                        <input id="checkoutCompanyName" name="companyName" type="text" autocomplete="organization" maxlength="120" placeholder="Northpeak HR">
+                    </label>
+
+                    <label class="field" for="checkoutTeamSize">
+                        <span>Team size</span>
+                        <select id="checkoutTeamSize" name="teamSize">
+                            <option value="">Select size</option>
+                            <option value="1-10">1-10</option>
+                            <option value="11-50">11-50</option>
+                            <option value="51-200">51-200</option>
+                            <option value="200+">200+</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <div class="plan-grid checkout-plan-grid">
                 <article class="panel plan-card">
                     <p class="plan-name">Starter Checkout</p>
                     <p class="plan-copy">One-time purchase for the Starter package.</p>

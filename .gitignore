@@ -1,6 +1,10 @@
 dist/
+public/
 node_modules/
 .vscode/
 data/
 .env
 application.properties
+.vercel
+.env*.local
+tools/stripe-cli/
